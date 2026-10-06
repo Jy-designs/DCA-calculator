@@ -200,32 +200,49 @@
     el('line', { class: 'cursor', x1: 0, x2: 0, y1: y0, y2: y1, visibility: 'hidden' }, svg);
     el('circle', { class: 'dot', r: 6, visibility: 'hidden' }, svg);
 
-    // X axis: months for up to ~15 months, month + year up to 3 years, otherwise years
+    // X axis: monthly ticks (with the year once the range spans more than one year) up to 3 years,
+    // otherwise yearly. Labels are measured, then thinned to every 2nd/3rd/6th/12th month on calendar
+    // boundaries (e.g. Jan · Apr · Jul · Oct) so they never touch.
     xAxis.textContent = '';
     const loc = window.i18n.locale;
-    const labels = [];
     const s = new Date(tMin), e = new Date(tMax);
     const months = (tMax - tMin) / (30.44 * 24 * 3600e3);
+    const xTicks = []; // [time, text, monthIndex]
     if (months <= 36) {
+      const multiYear = s.getUTCFullYear() !== e.getUTCFullYear();
       const mon = d0 => new Intl.DateTimeFormat(loc, { month: 'short', timeZone: 'UTC' }).format(d0).replace('.', '').slice(0, 3);
       for (let d0 = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth() + (s.getUTCDate() > 1 ? 1 : 0), 1)); d0 <= e; d0 = addMonths(d0, 1))
-        labels.push([+d0, months <= 15 ? mon(d0) : `${mon(d0)} ’${String(d0.getUTCFullYear()).slice(2)}`]);
+        xTicks.push([+d0, multiYear ? `${mon(d0)} ’${String(d0.getUTCFullYear()).slice(2)}` : mon(d0), d0.getUTCMonth()]);
     } else {
-      for (let y = s.getUTCFullYear() + 1; y <= e.getUTCFullYear(); y++) labels.push([Date.UTC(y, 0, 1), String(y)]);
+      for (let y = s.getUTCFullYear() + 1; y <= e.getUTCFullYear(); y++) xTicks.push([Date.UTC(y, 0, 1), String(y), 0]);
     }
-    // Show every k-th label so the spacing stays even when there isn't room for all of them
-    const minGap = small ? 34 : 52;
-    const span0 = labels.length > 1 ? X(labels[1][0]) - X(labels[0][0]) : Infinity;
-    const k = Math.max(1, Math.ceil(minGap / span0));
-    labels.forEach(([tt, txt], i) => {
-      const x = X(tt);
-      if (i % k || x > x1 - 12) return;
+    const spans = xTicks.map(([tt, txt, m], i) => {
       const span = document.createElement('span');
-      span.style.left = `${x}px`;
-      span.style.animationDelay = `${(i * 0.03).toFixed(2)}s`;
       span.textContent = txt;
+      span.style.left = `${X(tt)}px`;
+      span.style.animationDelay = `${(i * 0.03).toFixed(2)}s`;
       xAxis.appendChild(span);
+      return { span, x: X(tt), m, w: span.offsetWidth };
     });
+    const widest = Math.max(0, ...spans.map(o => o.w));
+    const pitch = spans.length > 1 ? spans[1].x - spans[0].x : Infinity;
+    const gap = small ? 12 : 20;
+    const yearly = months > 36;
+    const k = yearly ? Math.max(1, Math.ceil((widest + gap) / pitch)) : [1, 2, 3, 6, 12].find(n => n * pitch >= widest + gap) || 12;
+    // Keep every k-th label. Labels at the very ends are anchored inside the chart rather than centred
+    // on their tick; if an anchored label would touch its neighbour, drop it so the rhythm stays even.
+    const kept = [];
+    spans.forEach((o, i) => {
+      if (!(yearly ? i % k === 0 : o.m % k === 0)) { o.span.remove(); return; }
+      o.left = o.x - o.w / 2; o.edge = false;
+      if (o.left < 0) { o.left = 0; o.edge = true; }
+      if (o.left + o.w > x1) { o.left = x1 - o.w; o.edge = true; }
+      kept.push(o);
+    });
+    const clash = (a, b) => b.left < a.left + a.w + gap / 2;
+    if (kept.length > 1 && kept[0].edge && clash(kept[0], kept[1])) kept.shift().span.remove();
+    if (kept.length > 1 && kept[kept.length - 1].edge && clash(kept[kept.length - 2], kept[kept.length - 1])) kept.pop().span.remove();
+    kept.forEach(o => { if (o.edge) { o.span.style.transform = 'none'; o.span.style.left = `${o.left}px`; } });
 
     if (animate && !reduce) {
       [...svg.querySelectorAll('.line, .area, .invested, .dot--end, .pulse')].forEach(n => n.classList.add('is-drawing'));
