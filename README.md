@@ -19,7 +19,7 @@ Plain HTML, CSS and a little JavaScript: no build step or dependencies.
 - **What it shows:** what a recurring buy *would have been worth* if it had started in a chosen year. It's a back-test on real past prices, not a forecast.
 - **Data:** [Kraken public OHLC API](https://docs.kraken.com/api/docs/rest-api/get-ohlc-data), weekly EUR candles. No API key; CORS is open. Results are cached in the browser for an hour. If Kraken can't be reached, the page uses the saved snapshot and says so under the disclaimer.
 - **Method:** each buy uses the price at the start of the week it falls in (so it never uses prices from later that week). Value over time = coins held × weekly closing price; the final point uses the latest price. Fees and spreads are not included.
-- **Options:** 10 coins (BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, DOGE, LTC), €10–€10,000, weekly / bi-weekly / monthly, and a start year from this year back to 2015 (buys run from 1 January of that year until today). Years before a coin's price history are disabled.
+- **Options:** 10 coins (BTC, ETH, SOL, XRP, ADA, DOT, LINK, AVAX, DOGE, LTC), €10–€10,000, weekly / bi-weekly / monthly, and a start year from this year back to 2020 (buys run from 1 January of that year until today). Each coin only lists the years it has prices for; switching to a coin with less history moves to its earliest year.
 - **Before production:** confirm the data source with legal (see below), and switch to Venga's own price feed or a licensed provider if needed. Only `fetchLive()` in `calculator.js` needs to change.
 
 ## Breakpoints

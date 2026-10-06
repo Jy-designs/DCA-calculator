@@ -31,9 +31,9 @@
     { id: 'biweekly', key: 'whatis::frequency::biweekly', step: d => addDays(d, 14) },
     { id: 'monthly',  key: 'whatis::frequency::monthly',  step: d => addMonths(d, 1) }
   ];
-  // Start years: this year back to 2015. Buys run from 1 January of the chosen year until today
-  const THIS_YEAR = new Date().getUTCFullYear();
-  const YEARS = Array.from({ length: THIS_YEAR - 2015 + 1 }, (_, i) => THIS_YEAR - i);
+  // Start years: this year back to 2020. Buys run from 1 January of the chosen year until today
+  const THIS_YEAR = new Date().getUTCFullYear(), FIRST_YEAR = 2020;
+  const YEARS = Array.from({ length: THIS_YEAR - FIRST_YEAR + 1 }, (_, i) => THIS_YEAR - i);
   const state = { asset: 'BTC', amount: 100, freq: 'monthly', since: THIS_YEAR - 1 };
 
   // ---------- Dates ----------
@@ -356,7 +356,8 @@
     list('frequency', FREQS.map(f => ({ v: f.id, sel: f.id === state.freq, html: `<span>${t(f.key)}</span>` })));
     const series = memory[state.asset] && memory[state.asset].series;
     const first = series ? firstYear(series) : -Infinity;
-    list('years', YEARS.map(y => ({ v: y, sel: y === state.since, dis: y < first, html: `<span>${y}</span>${y < first ? `<small>${t('calculator::period::since')}</small>` : ''}` })));
+    // Only list the years this coin has prices for
+    list('years', YEARS.filter(y => y >= first).map(y => ({ v: y, sel: y === state.since, html: `<span>${y}</span>` })));
 
     const chips = fields.amount.querySelector('.amount-chips');
     chips.innerHTML = AMOUNTS.map(a => `<button type="button" data-v="${a}" aria-pressed="${a === state.amount}">${money(a, 0)}</button>`).join('');
