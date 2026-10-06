@@ -84,7 +84,7 @@ ul, ol { list-style: none; }
   background: var(--brand); overflow: hidden; position: relative; isolation: isolate;
   transition: transform .4s var(--ease-out), box-shadow .4s var(--ease-out);
 }
-.cta__label { width: 294px; font-weight: 700; font-size: 16px; line-height: 1; white-space: nowrap; color: var(--text); }
+.cta__label { width: 294px; font-weight: 700; font-size: 16px; line-height: 1; white-space: nowrap; color: var(--text); text-align: left; }
 .cta__icon { flex: none; width: 40px; height: 40px; padding: 8px; border-radius: 40px; background: var(--bg-default); overflow: hidden; transition: transform .5s var(--ease-spring); }
 .cta__icon img { transition: transform .5s var(--ease-out); }
 .cta::before { content: ""; position: absolute; inset: 0; z-index: -1; transform: translateX(-120%); background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.45) 50%, transparent 80%); }
